@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Emergency Management System (HEMS)</title>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-hover: #1d4ed8;
+            --danger: #dc2626;
+            --warning: #d97706;
+            --success: #16a34a;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: var(--bg); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
+
+        header { background: var(--primary); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
+        .user-pill { background: rgba(255,255,255,0.2); padding: 0.35rem 0.85rem; border-radius: 20px; font-size: 0.85rem; display: flex; gap: 0.5rem; align-items: center; }
+        .btn-logout { background: #ef4444; color: white; border: none; padding: 0.35rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: 600; margin-left: 0.5rem; }
+
+        /* Architecture Bar */
+        .arch-bar { background: #0f172a; color: white; padding: 0.5rem 1rem; display: flex; justify-content: center; align-items: center; gap: 0.75rem; font-size: 0.8rem; border-bottom: 2px solid #334155; }
+        .arch-step { background: #1e293b; padding: 0.25rem 0.6rem; border-radius: 4px; border: 1px solid #475569; display: flex; align-items: center; gap: 0.35rem; }
+        .dot { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; }
+
+        /* Stats */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; padding: 1.5rem 2rem 0.5rem 2rem; }
+        .stat-card { background: white; padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .stat-title { font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
+        .stat-val { font-size: 1.8rem; font-weight: 700; margin-top: 0.25rem; }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 0.5rem; padding: 1rem 2rem 0 2rem; border-bottom: 1px solid var(--border); }
+        .tab-btn { padding: 0.65rem 1.25rem; border: none; background: none; font-size: 0.95rem; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 3px solid transparent; }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+        .content { flex: 1; padding: 1.5rem 2rem; }
+        .tab-panel { display: none; background: white; border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; }
+        .tab-panel.active { display: block; }
+
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        th { background: #f1f5f9; color: #475569; font-size: 0.75rem; text-transform: uppercase; font-weight: 600; }
+        tr:hover { background: #f8fafc; }
+
+        .badge { padding: 0.2rem 0.55rem; border-radius: 12px; font-size: 0.75rem; font-weight: 700; display: inline-block; }
+        .badge-critical { background: #fee2e2; color: #991b1b; }
+        .badge-urgent { background: #fef3c7; color: #92400e; }
+        .badge-non-urgent { background: #dcfce7; color: #166534; }
+        .badge-admitted { background: #e0e7ff; color: #3730a3; }
+        .badge-discharged { background: #f1f5f9; color: #475569; }
+
+        /* Bed Cards */
+        .bed-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem; }
+        .bed-card { border: 2px solid var(--border); border-radius: 8px; padding: 1.25rem; text-align: center; }
+        .bed-card.avail { border-color: #86efac; background: #f0fdf4; }
+        .bed-card.occ { border-color: #fca5a5; background: #fef2f2; }
+        .bed-title { font-size: 1.2rem; font-weight: 700; }
+        .bed-sub { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+        .bed-status { font-weight: 700; font-size: 0.85rem; }
+
+        /* Form */
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; max-width: 600px; margin-top: 1rem; }
+        .form-group { display: flex; flex-direction: column; gap: 0.25rem; }
+        .form-group.full { grid-column: 1 / -1; }
+        .form-group label { font-size: 0.85rem; font-weight: 600; color: #475569; }
+        .form-group input, .form-group select { padding: 0.55rem 0.75rem; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9rem; }
+        .btn-submit { background: var(--primary); color: white; border: none; padding: 0.75rem; border-radius: 4px; font-weight: 600; cursor: pointer; margin-top: 0.5rem; }
+        .btn-submit:hover { background: var(--primary-hover); }
+
+        .btn-dis { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; padding: 0.3rem 0.6rem; border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: 600; }
+        .btn-dis:hover { background: #ef4444; color: white; }
+
+        /* Login Modal */
+        #login-modal { position: fixed; inset: 0; background: rgba(15,23,42,0.85); backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; z-index: 999; }
+        .login-box { background: white; width: 100%; max-width: 400px; padding: 2rem; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .login-box h2 { color: var(--primary); margin-bottom: 0.25rem; font-size: 1.4rem; }
+        .login-box p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.25rem; }
+        .quick-links { margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.8rem; }
+        .quick-links span { display: inline-block; background: #f1f5f9; padding: 0.25rem 0.5rem; border-radius: 4px; margin: 0.25rem 0.25rem 0 0; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <!-- LOGIN MODAL -->
+    <div id="login-modal">
+        <div class="login-box">
+            <h2>🏥 HEMS Application Login</h2>
+            <p>Credentials checked via JDBC against Oracle APP_USERS</p>
+            <div id="login-error" style="color: #dc2626; font-size: 0.85rem; margin-bottom: 0.75rem; display: none;"></div>
+            <form onsubmit="doLogin(event)">
+                <div class="form-group" style="margin-bottom: 0.75rem;">
+                    <label>Username</label>
+                    <input type="text" id="u" value="admin" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label>Password</label>
+                    <input type="password" id="p" value="admin123" required>
+                </div>
+                <button type="submit" class="btn-submit" style="width: 100%;">Login to HEMS</button>
+            </form>
+            <div class="quick-links">
+                <div style="font-weight: 600; color: #475569; margin-bottom: 0.25rem;">Quick Fill Accounts:</div>
+                <span onclick="setCreds('admin','admin123')">admin / admin123</span>
+                <span onclick="setCreds('doctor','doctor123')">doctor / doctor123</span>
+                <span onclick="setCreds('25bce5654','25bce5654')">25bce5654 (Student)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP HEADER -->
+    <header>
+        <div class="logo">🚑 Hospital Emergency Management System</div>
+        <div style="display: flex; align-items: center;">
+            <div class="user-pill">
+                <span id="header-user-name">Not Logged In</span>
+                <span id="header-user-role" style="background: #3b82f6; padding: 1px 6px; border-radius: 10px; font-size: 0.7rem; font-weight: 700;">GUEST</span>
+            </div>
+            <button class="btn-logout" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <!-- ARCHITECTURE FLOW BANNER -->
+    <div class="arch-bar">
+        <div class="arch-step"><span class="dot"></span> 1. Application Login (<span id="user-display-tag">admin</span>)</div>
+        <span>➔</span>
+        <div class="arch-step"><span class="dot"></span> 2. REST API Layer (:8080)</div>
+        <span>➔</span>
+        <div class="arch-step"><span class="dot"></span> 3. JDBC Driver (PreparedStatement)</div>
+        <span>➔</span>
+        <div class="arch-step"><span class="dot"></span> 4. Oracle DB 11g (172.16.8.54)</div>
+    </div>
+
+    <!-- LIVE STATS -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-title">Admitted Patients</div>
+            <div class="stat-val" id="stat-patients" style="color: #2563eb;">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">Critical Patients</div>
+            <div class="stat-val" id="stat-critical" style="color: #dc2626;">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">Available Beds</div>
+            <div class="stat-val" id="stat-beds" style="color: #16a34a;">0 / 5</div>
+        </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="showTab('tab-patients')">👥 Patients List</button>
+        <button class="tab-btn" onclick="showTab('tab-beds')">🛏️ Bed & ICU Matrix</button>
+        <button class="tab-btn" onclick="showTab('tab-admit')">➕ Admit Patient (Atomic Transaction)</button>
+    </div>
+
+    <div class="content">
+        <!-- TAB 1: PATIENTS -->
+        <div id="tab-patients" class="tab-panel active">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Active Emergency Patients</h3>
+                <button onclick="loadData()" style="padding: 0.35rem 0.75rem; cursor: pointer; border: 1px solid var(--border); border-radius: 4px; background: white;">🔄 Refresh</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Patient ID</th>
+                        <th>Name</th>
+                        <th>Age</th>
+                        <th>Gender</th>
+                        <th>Triage Severity</th>
+                        <th>Status</th>
+                        <th>Admission Time</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="patient-tbody"></tbody>
+            </table>
+        </div>
+
+        <!-- TAB 2: BEDS -->
+        <div id="tab-beds" class="tab-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Emergency & ICU Beds Status</h3>
+                <button onclick="loadData()" style="padding: 0.35rem 0.75rem; cursor: pointer; border: 1px solid var(--border); border-radius: 4px; background: white;">🔄 Refresh</button>
+            </div>
+            <div class="bed-grid" id="bed-container"></div>
+        </div>
+
+        <!-- TAB 3: ADMIT FORM -->
+        <div id="tab-admit" class="tab-panel">
+            <h3>New Emergency Admission</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
+                Atomically executes patient insertion and bed allocation under <code>setAutoCommit(false)</code>.
+            </p>
+            <div id="admit-alert" style="margin-top: 1rem; display: none; padding: 0.75rem; border-radius: 4px; font-size: 0.85rem;"></div>
+
+            <form onsubmit="doAdmit(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Patient ID *</label>
+                        <input type="number" id="adm-id" placeholder="e.g. 201" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Patient Name *</label>
+                        <input type="text" id="adm-name" placeholder="e.g. John Doe" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Age *</label>
+                        <input type="number" id="adm-age" min="1" max="120" placeholder="e.g. 45" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Gender</label>
+                        <select id="adm-gender">
+                            <option value="M">Male (M)</option>
+                            <option value="F">Female (F)</option>
+                            <option value="OTHER">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Triage Priority *</label>
+                        <select id="adm-triage">
+                            <option value="CRITICAL">🔴 CRITICAL (Immediate Life Threat)</option>
+                            <option value="URGENT">🟠 URGENT (Severe Condition)</option>
+                            <option value="NON-URGENT">🟢 NON-URGENT (Stable)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Select Available Bed *</label>
+                        <select id="adm-bed" required></select>
+                    </div>
+                    <div class="form-group full">
+                        <button type="submit" class="btn-submit">⚡ Admit Patient & Allocate Bed</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function setCreds(u, p) {
+            document.getElementById('u').value = u;
+            document.getElementById('p').value = p;
+        }
+
+        async function doLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('u').value.trim();
+            const p = document.getElementById('p').value.trim();
+            const errDiv = document.getElementById('login-error');
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: u, password: p })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('login-modal').style.display = 'none';
+                    document.getElementById('header-user-name').innerText = data.name;
+                    document.getElementById('header-user-role').innerText = data.role;
+                    document.getElementById('user-display-tag').innerText = u;
+                    loadData();
+                } else {
+                    errDiv.innerText = data.message || "Invalid login.";
+                    errDiv.style.display = 'block';
+                }
+            } catch (err) {
+                errDiv.innerText = "Error: " + err.message;
+                errDiv.style.display = 'block';
+            }
+        }
+
+        function logout() {
+            document.getElementById('login-modal').style.display = 'flex';
+        }
+
+        function showTab(id) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(id).classList.add('active');
+        }
+
+        async function loadData() {
+            try {
+                // Load Patients
+                const patRes = await fetch('/api/patients');
+                const patients = await patRes.json();
+                renderPatients(patients);
+
+                // Load Beds
+                const bedRes = await fetch('/api/beds');
+                const beds = await bedRes.json();
+                renderBeds(beds);
+
+                // Update Stats
+                let criticalCount = 0;
+                let admittedCount = 0;
+                patients.forEach(p => {
+                    if (p.status === 'ADMITTED') {
+                        admittedCount++;
+                        if (p.triage === 'CRITICAL') criticalCount++;
+                    }
+                });
+                let availBeds = beds.filter(b => b.isOccupied !== 'Y').length;
+
+                document.getElementById('stat-patients').innerText = admittedCount;
+                document.getElementById('stat-critical').innerText = criticalCount;
+                document.getElementById('stat-beds').innerText = `${availBeds} / ${beds.length}`;
+
+            } catch (err) {
+                console.error("Load error:", err);
+            }
+        }
+
+        function renderPatients(patients) {
+            const tbody = document.getElementById('patient-tbody');
+            tbody.innerHTML = '';
+            if (patients.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color: var(--text-muted);">No patients registered yet.</td></tr>';
+                return;
+            }
+            patients.forEach(p => {
+                const tr = document.createElement('tr');
+                let tClass = 'badge-non-urgent';
+                if (p.triage === 'CRITICAL') tClass = 'badge-critical';
+                else if (p.triage === 'URGENT') tClass = 'badge-urgent';
+
+                tr.innerHTML = `
+                    <td><strong>#${p.patientId}</strong></td>
+                    <td>${p.name}</td>
+                    <td>${p.age}</td>
+                    <td>${p.gender}</td>
+                    <td><span class="badge ${tClass}">${p.triage}</span></td>
+                    <td><span class="badge ${p.status === 'ADMITTED' ? 'badge-admitted' : 'badge-discharged'}">${p.status}</span></td>
+                    <td style="color: var(--text-muted); font-size: 0.8rem;">${p.time || '-'}</td>
+                    <td>
+                        ${p.status === 'ADMITTED' ? `<button class="btn-dis" onclick="discharge(${p.patientId})">Discharge</button>` : '-'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderBeds(beds) {
+            const grid = document.getElementById('bed-container');
+            const select = document.getElementById('adm-bed');
+            grid.innerHTML = '';
+            select.innerHTML = '<option value="">-- Choose an Available Bed --</option>';
+
+            beds.forEach(b => {
+                const isOcc = b.isOccupied === 'Y';
+                const card = document.createElement('div');
+                card.className = `bed-card ${isOcc ? 'occ' : 'avail'}`;
+                card.innerHTML = `
+                    <div class="bed-title">Bed #${b.bedId}</div>
+                    <div class="bed-sub">${b.bedType}</div>
+                    <div class="bed-status" style="color: ${isOcc ? '#dc2626' : '#16a34a'};">
+                        ${isOcc ? '🔴 OCCUPIED (Patient #' + b.patientId + ')' : '🟢 AVAILABLE'}
+                    </div>
+                `;
+                grid.appendChild(card);
+
+                if (!isOcc) {
+                    const opt = document.createElement('option');
+                    opt.value = b.bedId;
+                    opt.innerText = `Bed #${b.bedId} (${b.bedType}) - AVAILABLE`;
+                    select.appendChild(opt);
+                }
+            });
+        }
+
+        async function doAdmit(e) {
+            e.preventDefault();
+            const id = parseInt(document.getElementById('adm-id').value);
+            const name = document.getElementById('adm-name').value.trim();
+            const age = parseInt(document.getElementById('adm-age').value);
+            const gender = document.getElementById('adm-gender').value;
+            const triage = document.getElementById('adm-triage').value;
+            const bedId = parseInt(document.getElementById('adm-bed').value);
+
+            const alertDiv = document.getElementById('admit-alert');
+
+            try {
+                const res = await fetch('/api/admit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ patientId: id, name, age, gender, triage, bedId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alertDiv.style.background = '#dcfce7';
+                    alertDiv.style.color = '#166534';
+                    alertDiv.innerText = data.message;
+                    alertDiv.style.display = 'block';
+
+                    document.getElementById('adm-id').value = '';
+                    document.getElementById('adm-name').value = '';
+                    document.getElementById('adm-age').value = '';
+                    loadData();
+                    setTimeout(() => { alertDiv.style.display = 'none'; }, 5000);
+                } else {
+                    alertDiv.style.background = '#fee2e2';
+                    alertDiv.style.color = '#991b1b';
+                    alertDiv.innerText = data.message;
+                    alertDiv.style.display = 'block';
+                }
+            } catch (err) {
+                alertDiv.style.background = '#fee2e2';
+                alertDiv.style.color = '#991b1b';
+                alertDiv.innerText = "Error: " + err.message;
+                alertDiv.style.display = 'block';
+            }
+        }
+
+        async function discharge(patientId) {
+            if (!confirm(`Discharge Patient #${patientId} and release bed?`)) return;
+            try {
+                const res = await fetch('/api/discharge', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ patientId })
+                });
+                const data = await res.json();
+                alert(data.message);
+                loadData();
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        }
+    </script>
+</body>
+</html>
