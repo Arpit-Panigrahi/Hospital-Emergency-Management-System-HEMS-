@@ -161,6 +161,11 @@ If an exception occurs or the bed is already occupied, `con.rollback()` is execu
 - **Oracle Database**: Oracle Database 11g/12c/19c/XE accessible on network.
 - **Git**: Installed for version control.
 - **Web Browser**: Chrome, Edge, Firefox, or Safari (for Web UI).
+- **Environment Variables (required for backend runtime)**:
+  - `HEMS_DB_USER`
+  - `HEMS_DB_PASSWORD`
+  - Optional: `HEMS_DB_URL` (defaults to `jdbc:oracle:thin:@172.16.8.54:1521:orcl`)
+  - Optional: `CORS_ALLOWED_ORIGINS` (comma-separated frontend origins, e.g. `https://<user>.github.io,https://<project>.vercel.app`)
 
 ---
 
@@ -180,6 +185,8 @@ javac -cp ojdbc6.jar *.java
 1. Start the Java HTTP REST Server:
 ```powershell
 cd C:\Users\lab1\HEMS
+set HEMS_DB_USER=your_db_user
+set HEMS_DB_PASSWORD=your_db_password
 java -cp ".;ojdbc6.jar" WebServer
 ```
 2. The application will start on port `8080` and automatically open in your default browser at:
@@ -251,6 +258,43 @@ SELECT * FROM APP_USERS;
    - Patient `201` status changes to `DISCHARGED`.
    - Bed `101` status resets to `IS_OCCUPIED = 'N'` and `PATIENT_ID = NULL`.
    - Bed becomes immediately available for new emergency admissions.
+
+---
+
+## ☁️ Deployment (Frontend + Backend Split)
+
+This project is now prepared for a split deployment model:
+
+1. **Frontend (Static UI)**
+   - Deploy `index.html` to **GitHub Pages** or **Vercel**.
+   - The frontend reads `window.HEMS_API_BASE` and calls `${HEMS_API_BASE}/api/...`.
+   - For local same-origin usage, keep `HEMS_API_BASE` empty.
+
+2. **Backend (Java API Server)**
+   - Deploy Java backend (`WebServer.java` + service/DAO classes + `ojdbc6.jar`) to a Java-capable host such as **Render**, **Railway**, **Fly.io**, or **AWS**.
+   - Configure environment variables:
+     - `HEMS_DB_USER`
+     - `HEMS_DB_PASSWORD`
+     - `HEMS_DB_URL` (if not using default)
+     - `CORS_ALLOWED_ORIGINS` with your frontend domain(s)
+
+3. **Frontend API Base Configuration**
+   - Add this script before the main `<script>` in `index.html` (or inject through your host):
+```html
+<script>
+  window.HEMS_API_BASE = "https://your-backend-host.example.com";
+</script>
+```
+
+4. **Vercel Frontend**
+   - `vercel.json` is included to serve the static SPA entrypoint.
+   - Deploy repository root on Vercel for frontend-only hosting.
+
+5. **GitHub Pages Frontend**
+   - Publish `index.html` from your selected branch/folder.
+   - Ensure `window.HEMS_API_BASE` points to the deployed backend URL.
+
+> ⚠️ GitHub Pages cannot run the Java backend or Oracle JDBC layer; it can host only the static frontend.
 
 ---
 

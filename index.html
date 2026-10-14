@@ -247,6 +247,9 @@
     </div>
 
     <script>
+        const API_BASE = (window.HEMS_API_BASE || '').trim().replace(/\/+$/, '');
+        const apiUrl = (path) => `${API_BASE}${path}`;
+
         function setCreds(u, p) {
             document.getElementById('u').value = u;
             document.getElementById('p').value = p;
@@ -259,7 +262,7 @@
             const errDiv = document.getElementById('login-error');
 
             try {
-                const res = await fetch('/api/login', {
+                const res = await fetch(apiUrl('/api/login'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username: u, password: p })
@@ -295,12 +298,12 @@
         async function loadData() {
             try {
                 // Load Patients
-                const patRes = await fetch('/api/patients');
+                const patRes = await fetch(apiUrl('/api/patients'));
                 const patients = await patRes.json();
                 renderPatients(patients);
 
                 // Load Beds
-                const bedRes = await fetch('/api/beds');
+                const bedRes = await fetch(apiUrl('/api/beds'));
                 const beds = await bedRes.json();
                 renderBeds(beds);
 
@@ -393,7 +396,7 @@
             const alertDiv = document.getElementById('admit-alert');
 
             try {
-                const res = await fetch('/api/admit', {
+                const res = await fetch(apiUrl('/api/admit'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ patientId: id, name, age, gender, triage, bedId })
@@ -427,7 +430,7 @@
         async function discharge(patientId) {
             if (!confirm(`Discharge Patient #${patientId} and release bed?`)) return;
             try {
-                const res = await fetch('/api/discharge', {
+                const res = await fetch(apiUrl('/api/discharge'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ patientId })
