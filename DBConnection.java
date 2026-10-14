@@ -3,10 +3,8 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DBConnection {
-    // Lab Oracle Database Connection Details
-    private static final String URL = "jdbc:oracle:thin:@172.16.8.54:1521:orcl";
-    private static final String USER = "25bce5654";
-    private static final String PASSWORD = "25bce5654";
+    // JDBC details can be set via env vars for cloud deployment
+    private static final String DEFAULT_URL = "jdbc:oracle:thin:@172.16.8.54:1521:orcl";
 
     public static Connection getConnection() throws SQLException {
         try {
@@ -14,6 +12,25 @@ public class DBConnection {
         } catch (ClassNotFoundException e) {
             System.err.println("Driver Error: " + e.getMessage());
         }
-        return DriverManager.getConnection(URL, USER, PASSWORD);
+
+        String url = getEnvOrDefault("HEMS_DB_URL", DEFAULT_URL);
+        String user = getRequiredEnv("HEMS_DB_USER");
+        String password = getRequiredEnv("HEMS_DB_PASSWORD");
+
+        return DriverManager.getConnection(url, user, password);
+    }
+
+    private static String getEnvOrDefault(String key, String defaultValue) {
+        String val = System.getenv(key);
+        if (val == null || val.isBlank()) return defaultValue;
+        return val;
+    }
+
+    private static String getRequiredEnv(String key) {
+        String val = System.getenv(key);
+        if (val == null || val.isBlank()) {
+            throw new IllegalStateException("Missing required environment variable: " + key);
+        }
+        return val;
     }
 }

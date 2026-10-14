@@ -11,16 +11,20 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class WebServer {
 
     private static final int PORT = 8080;
     private static final PatientDAO patientDAO = new PatientDAO();
     private static final EmergencyService emergencyService = new EmergencyService();
+    private static final List<String> ALLOWED_ORIGINS = loadAllowedOrigins();
 
     public static void main(String[] args) throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
@@ -56,6 +60,7 @@ public class WebServer {
     static class StaticFileHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange ex) throws IOException {
+            if (handleCorsPreflight(ex)) return;
             File htmlFile = new File("index.html");
             if (!htmlFile.exists()) {
                 sendResponse(ex, 404, "text/plain", "index.html not found.");
@@ -70,6 +75,7 @@ public class WebServer {
     static class LoginHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange ex) throws IOException {
+            if (handleCorsPreflight(ex)) return;
             if (!"POST".equalsIgnoreCase(ex.getRequestMethod())) {
                 sendResponse(ex, 405, "application/json", "{\"error\":\"Method Not Allowed\"}");
                 return;
@@ -94,6 +100,7 @@ public class WebServer {
     static class PatientsHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange ex) throws IOException {
+            if (handleCorsPreflight(ex)) return;
             String json = patientDAO.getPatientsJson();
             sendResponse(ex, 200, "application/json", json);
         }
@@ -103,6 +110,7 @@ public class WebServer {
     static class BedsHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange ex) throws IOException {
+            if (handleCorsPreflight(ex)) return;
             String json = patientDAO.getBedsJson();
             sendResponse(ex, 200, "application/json", json);
         }
@@ -112,6 +120,7 @@ public class WebServer {
     static class AdmitHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange ex) throws IOException {
+            if (handleCorsPreflight(ex)) return;
             if (!"POST".equalsIgnoreCase(ex.getRequestMethod())) {
                 sendResponse(ex, 405, "application/json", "{\"error\":\"Method Not Allowed\"}");
                 return;
@@ -143,6 +152,7 @@ public class WebServer {
     static class DischargeHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange ex) throws IOException {
+            if (handleCorsPreflight(ex)) return;
             if (!"POST".equalsIgnoreCase(ex.getRequestMethod())) {
                 sendResponse(ex, 405, "application/json", "{\"error\":\"Method Not Allowed\"}");
                 return;
@@ -177,11 +187,54 @@ public class WebServer {
 
     private static void sendResponseBytes(HttpExchange ex, int status, String contentType, byte[] bytes) throws IOException {
         ex.getResponseHeaders().set("Content-Type", contentType);
-        ex.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+        applyCorsHeaders(ex);
         ex.sendResponseHeaders(status, bytes.length);
         try (OutputStream os = ex.getResponseBody()) {
             os.write(bytes);
         }
+    }
+
+    private static List<String> loadAllowedOrigins() {
+        String raw = System.getenv("CORS_ALLOWED_ORIGINS");
+        if (raw == null || raw.isBlank()) {
+            return List.of("*");
+        }
+        return Arrays.stream(raw.split(","))
+                .map(String::trim)
+                .filter(v -> !v.isEmpty())
+                .collect(Collectors.toList());
+    }
+
+    private static boolean handleCorsPreflight(HttpExchange ex) throws IOException {
+        if (!"OPTIONS".equalsIgnoreCase(ex.getRequestMethod())) {
+            return false;
+        }
+
+        String origin = ex.getRequestHeaders().getFirst("Origin");
+        if (!isOriginAllowed(origin)) {
+            sendResponse(ex, 403, "application/json", "{\"error\":\"Origin not allowed\"}");
+            return true;
+        }
+
+        sendResponseBytes(ex, 204, "text/plain; charset=utf-8", new byte[0]);
+        return true;
+    }
+
+    private static boolean isOriginAllowed(String origin) {
+        if (ALLOWED_ORIGINS.contains("*")) return true;
+        return origin != null && ALLOWED_ORIGINS.contains(origin);
+    }
+
+    private static void applyCorsHeaders(HttpExchange ex) {
+        String origin = ex.getRequestHeaders().getFirst("Origin");
+        if (ALLOWED_ORIGINS.contains("*")) {
+            ex.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+        } else if (origin != null && ALLOWED_ORIGINS.contains(origin)) {
+            ex.getResponseHeaders().set("Access-Control-Allow-Origin", origin);
+            ex.getResponseHeaders().set("Vary", "Origin");
+        }
+        ex.getResponseHeaders().set("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+        ex.getResponseHeaders().set("Access-Control-Allow-Headers", "Content-Type, Authorization");
     }
 
     private static Map<String, String> parseJson(String json) {
