@@ -131,13 +131,13 @@
 
     <!-- ARCHITECTURE FLOW BANNER -->
     <div class="arch-bar">
-        <div class="arch-step"><span class="dot"></span> 1. Application Login (<span id="user-display-tag">admin</span>)</div>
+        <div class="arch-step" id="arch-step-1"><span class="dot"></span> 1. Application Login (<span id="user-display-tag">admin</span>)</div>
         <span>➔</span>
-        <div class="arch-step"><span class="dot"></span> 2. REST API Layer (:8080)</div>
+        <div class="arch-step" id="arch-step-2"><span class="dot"></span> 2. REST API Layer (:8080)</div>
         <span>➔</span>
-        <div class="arch-step"><span class="dot"></span> 3. JDBC Driver (PreparedStatement)</div>
+        <div class="arch-step" id="arch-step-3"><span class="dot"></span> 3. JDBC Driver (PreparedStatement)</div>
         <span>➔</span>
-        <div class="arch-step"><span class="dot"></span> 4. Oracle DB 11g (172.16.8.54)</div>
+        <div class="arch-step" id="arch-step-4"><span class="dot"></span> 4. Oracle DB 11g (172.16.8.54)</div>
     </div>
 
     <!-- LIVE STATS -->
@@ -247,6 +247,22 @@
     </div>
 
     <script>
+        const API_BASE = (window.HEMS_API_BASE || '').trim().replace(/\/+$/, '');
+        const apiUrl = (path) => `${API_BASE}${path}`;
+
+        // Dynamic architecture diagram for Cloud vs Lab
+        window.addEventListener('DOMContentLoaded', () => {
+            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const s2 = document.getElementById('arch-step-2');
+            const s3 = document.getElementById('arch-step-3');
+            const s4 = document.getElementById('arch-step-4');
+            if (!isLocal) {
+                if (s2) s2.innerHTML = '<span class="dot"></span> 2. REST API Layer (/api)';
+                if (s3) s3.innerHTML = '<span class="dot"></span> 3. Online Server Backend';
+                if (s4) s4.innerHTML = '<span class="dot"></span> 4. ACID Transaction DB Engine';
+            }
+        });
+
         function setCreds(u, p) {
             document.getElementById('u').value = u;
             document.getElementById('p').value = p;
@@ -259,7 +275,7 @@
             const errDiv = document.getElementById('login-error');
 
             try {
-                const res = await fetch('/api/login', {
+                const res = await fetch(apiUrl('/api/login'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username: u, password: p })
@@ -295,12 +311,12 @@
         async function loadData() {
             try {
                 // Load Patients
-                const patRes = await fetch('/api/patients');
+                const patRes = await fetch(apiUrl('/api/patients'));
                 const patients = await patRes.json();
                 renderPatients(patients);
 
                 // Load Beds
-                const bedRes = await fetch('/api/beds');
+                const bedRes = await fetch(apiUrl('/api/beds'));
                 const beds = await bedRes.json();
                 renderBeds(beds);
 
@@ -393,7 +409,7 @@
             const alertDiv = document.getElementById('admit-alert');
 
             try {
-                const res = await fetch('/api/admit', {
+                const res = await fetch(apiUrl('/api/admit'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ patientId: id, name, age, gender, triage, bedId })
@@ -427,7 +443,7 @@
         async function discharge(patientId) {
             if (!confirm(`Discharge Patient #${patientId} and release bed?`)) return;
             try {
-                const res = await fetch('/api/discharge', {
+                const res = await fetch(apiUrl('/api/discharge'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ patientId })

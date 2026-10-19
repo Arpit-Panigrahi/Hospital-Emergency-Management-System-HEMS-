@@ -1,6 +1,14 @@
 # Hospital Emergency Management System (HEMS)
 
-A robust, multi-tier database application developed in **Java** interfacing directly with **Oracle Database 11g Enterprise** via JDBC (Type 4 Driver). The system features both an **interactive terminal console (CLI)** and a **modern browser-based dashboard (Web UI)**, providing real-time patient triage, dynamic bed allocation, and strict ACID transaction management with automated rollback handling.
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Arpit-Panigrahi/Hospital-Emergency-Management-System-HEMS-)
+[![Vercel Deployment](https://img.shields.io/badge/Vercel-Full--Stack_Hosted-black?style=flat&logo=vercel)](https://github.com/Arpit-Panigrahi/Hospital-Emergency-Management-System-HEMS-)
+[![Node.js Backend](https://img.shields.io/badge/Backend-Serverless_API-green)](https://github.com/Arpit-Panigrahi/Hospital-Emergency-Management-System-HEMS-)
+[![Java 17+](https://img.shields.io/badge/Java-17+-orange?logo=openjdk)](https://github.com/Arpit-Panigrahi/Hospital-Emergency-Management-System-HEMS-)
+[![Database](https://img.shields.io/badge/Database-Oracle%2011g%20%7C%20PostgreSQL-red)](https://github.com/Arpit-Panigrahi/Hospital-Emergency-Management-System-HEMS-)
+
+A robust, multi-tier emergency triage and hospital bed allocation system featuring:
+- **☁️ 100% Free Online Cloud Full-Stack**: Single clickable deployment on Vercel running a serverless backend (`/api`) with ACID transaction handling, concurrency checks, and optional PostgreSQL cloud persistence.
+- **🏢 University Lab Offline Mode**: Java HTTP REST server and interactive CLI connecting directly to Oracle Database 11g Enterprise via JDBC Type 4 (`ojdbc6.jar`).
 
 ---
 
@@ -60,16 +68,21 @@ The application implements a multi-tier client-server architecture:
 All application components are placed in a flat, clean folder structure:
 
 ```
-C:\Users\lab1\HEMS\
+HEMS/
+├── api/
+│   └── index.js            # Cloud Serverless Backend API (Vercel Node.js runtime)
+├── index.html              # Responsive single-page application (HTML5/CSS3/JS)
+├── vercel.json             # Vercel deployment & serverless routing config
+├── package.json            # Node.js project descriptor & dependencies
+│
 ├── DBConnection.java       # Centralized JDBC connection factory (Oracle 11g)
 ├── PatientDAO.java         # Data Access Object (CRUD, queries, JSON serialization)
 ├── EmergencyService.java   # Business logic & atomic ACID transaction management
 ├── MainApp.java            # Interactive command-line interface (CLI)
 ├── WebServer.java          # Built-in lightweight HTTP REST server (Port 8080)
-├── index.html              # Responsive single-page application (HTML5/CSS3/JS)
 ├── schema.sql              # Oracle DDL & seed data script
 ├── ojdbc6.jar              # Oracle JDBC Type 4 Driver
-├── .gitignore              # Ignores compiled bytecode (*.class)
+├── .gitignore              # Ignores compiled bytecode (*.class) and node_modules
 └── README.md               # Comprehensive project documentation
 ```
 
@@ -166,20 +179,37 @@ If an exception occurs or the bed is already occupied, `con.rollback()` is execu
 
 ## 🚀 Step-by-Step Execution Guide
 
-### Compilation (If source code is modified)
+### Option 1: ☁️ 1-Click Free Cloud Deployment on Vercel (Online Full-Stack)
+
+Deploy the entire frontend and backend online to Vercel with a single click:
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Arpit-Panigrahi/Hospital-Emergency-Management-System-HEMS-)
+
+1. Click the **Deploy with Vercel** button above.
+2. Sign in with GitHub on [Vercel](https://vercel.com).
+3. Vercel automatically forks and deploys both the frontend dashboard and the serverless backend (`/api`) in under 60 seconds.
+4. **Instant Access**: Open your assigned `https://<your-project>.vercel.app` URL.
+5. **(Optional) Cloud Database Connection**:
+   - Go to Vercel Project Settings ➔ **Environment Variables**.
+   - Add `DATABASE_URL` with your free connection string from [Neon](https://neon.tech) or [Supabase](https://supabase.com).
+   - If omitted, the online server automatically operates with high-resilience in-cloud state pre-seeded with all accounts and beds.
+
+---
+
+### Option 2: 🏢 Running in University Lab (Java & Oracle 11g)
+
+#### Compilation (If Java source is modified)
 Open PowerShell or Command Prompt in the project folder:
 ```powershell
-cd C:\Users\lab1\HEMS
 javac -cp ojdbc6.jar *.java
 ```
 
 ---
 
-### Option A: Running the Web Dashboard
+#### Lab Web Dashboard Server (Localhost:8080)
 
 1. Start the Java HTTP REST Server:
 ```powershell
-cd C:\Users\lab1\HEMS
 java -cp ".;ojdbc6.jar" WebServer
 ```
 2. The application will start on port `8080` and automatically open in your default browser at:

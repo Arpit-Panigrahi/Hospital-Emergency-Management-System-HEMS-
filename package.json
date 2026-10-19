@@ -1,0 +1,25 @@
+{
+  "name": "hospital-emergency-management-system",
+  "version": "1.0.0",
+  "description": "Hospital Emergency Management System (HEMS) - Online Full-Stack Cloud Deployment on Vercel",
+  "main": "api/index.js",
+  "scripts": {
+    "start": "node api/index.js",
+    "dev": "node api/index.js"
+  },
+  "dependencies": {
+    "pg": "^8.11.3"
+  },
+  "engines": {
+    "node": ">=18.x"
+  },
+  "keywords": [
+    "hospital-management",
+    "emergency-room",
+    "triage",
+    "fullstack",
+    "vercel"
+  ],
+  "author": "Arpit Panigrahi",
+  "license": "MIT"
+}
