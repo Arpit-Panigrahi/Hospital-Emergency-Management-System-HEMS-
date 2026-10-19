@@ -1,29 +1,34 @@
 # Hospital Emergency Management System (HEMS)
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-hems1.vercel.app-2ea44f?style=for-the-badge&logo=vercel)](https://hems1.vercel.app/)
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Arpit-Panigrahi/Hospital-Emergency-Management-System-HEMS-)
-[![Vercel Deployment](https://img.shields.io/badge/Vercel-Full--Stack_Hosted-black?style=flat&logo=vercel)](https://github.com/Arpit-Panigrahi/Hospital-Emergency-Management-System-HEMS-)
-[![Node.js Backend](https://img.shields.io/badge/Backend-Serverless_API-green)](https://github.com/Arpit-Panigrahi/Hospital-Emergency-Management-System-HEMS-)
+
+[![Live Production URL](https://img.shields.io/badge/Production-hems1.vercel.app-blue?style=flat&logo=vercel)](https://hems1.vercel.app/)
+[![Node.js Backend](https://img.shields.io/badge/Backend-Serverless_API-green)](https://hems1.vercel.app/api/health)
 [![Java 17+](https://img.shields.io/badge/Java-17+-orange?logo=openjdk)](https://github.com/Arpit-Panigrahi/Hospital-Emergency-Management-System-HEMS-)
 [![Database](https://img.shields.io/badge/Database-Oracle%2011g%20%7C%20PostgreSQL-red)](https://github.com/Arpit-Panigrahi/Hospital-Emergency-Management-System-HEMS-)
 
+> 🌐 **Live Web Application**: [https://hems1.vercel.app/](https://hems1.vercel.app/)  
+> Access the live cloud deployment with online server-side authentication, real-time patient triage, dynamic bed allocation, and ACID transaction rollback handling.
+
 A robust, multi-tier emergency triage and hospital bed allocation system featuring:
-- **☁️ 100% Free Online Cloud Full-Stack**: Single clickable deployment on Vercel running a serverless backend (`/api`) with ACID transaction handling, concurrency checks, and optional PostgreSQL cloud persistence.
+- **☁️ 100% Free Online Cloud Full-Stack**: Deployed live at [hems1.vercel.app](https://hems1.vercel.app/) running a serverless REST backend (`/api`) with atomic transaction handling, concurrency checks, and optional PostgreSQL cloud persistence.
 - **🏢 University Lab Offline Mode**: Java HTTP REST server and interactive CLI connecting directly to Oracle Database 11g Enterprise via JDBC Type 4 (`ojdbc6.jar`).
 
 ---
 
 ## 📑 Table of Contents
-1. [Architecture & System Flow](#-architecture--system-flow)
-2. [Project Structure](#-project-structure)
-3. [Database Design & Schema Implementation](#-database-design--schema-implementation)
-4. [Key Features & Transaction Handling](#-key-features--transaction-handling)
-5. [Prerequisites](#-prerequisites)
-6. [Step-by-Step Execution Guide](#-step-by-step-execution-guide)
-   - [Option A: Running the Web Dashboard](#option-a-running-the-web-dashboard)
-   - [Option B: Running the Console Interface](#option-b-running-the-console-interface)
-   - [Option C: Direct Oracle Verification in SQL*Plus](#option-c-direct-oracle-verification-in-sqlplus)
-7. [Testing & Demonstration Scenarios](#-testing--demonstration-scenarios)
-8. [Git Version Control & Repository](#-git-version-control--repository)
+1. [Live Web Application](#hospital-emergency-management-system-hems)
+2. [Architecture & System Flow](#-architecture--system-flow)
+3. [Project Structure](#-project-structure)
+4. [Database Design & Schema Implementation](#-database-design--schema-implementation)
+5. [Key Features & Transaction Handling](#-key-features--transaction-handling)
+6. [Prerequisites](#-prerequisites)
+7. [Step-by-Step Execution Guide](#-step-by-step-execution-guide)
+   - [Option 1: Live Cloud Hosting (Vercel)](#option-1-️-1-click-free-cloud-deployment-on-vercel-online-full-stack)
+   - [Option 2: Running in University Lab (Java & Oracle 11g)](#option-2--running-in-university-lab-java--oracle-11g)
+8. [Testing & Demonstration Scenarios](#-testing--demonstration-scenarios)
+9. [Git Version Control & Repository](#-git-version-control--repository)
 
 ---
 
@@ -179,17 +184,22 @@ If an exception occurs or the bed is already occupied, `con.rollback()` is execu
 
 ## 🚀 Step-by-Step Execution Guide
 
-### Option 1: ☁️ 1-Click Free Cloud Deployment on Vercel (Online Full-Stack)
+### Option 1: ☁️ Live Cloud Deployment (https://hems1.vercel.app/)
 
-Deploy the entire frontend and backend online to Vercel with a single click:
+The application is deployed live in production:
+👉 **[https://hems1.vercel.app/](https://hems1.vercel.app/)**
+
+You can also deploy your own independent copy with a single click:
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Arpit-Panigrahi/Hospital-Emergency-Management-System-HEMS-)
 
-1. Click the **Deploy with Vercel** button above.
-2. Sign in with GitHub on [Vercel](https://vercel.com).
-3. Vercel automatically forks and deploys both the frontend dashboard and the serverless backend (`/api`) in under 60 seconds.
-4. **Instant Access**: Open your assigned `https://<your-project>.vercel.app` URL.
-5. **(Optional) Cloud Database Connection**:
+1. Open the live site at **[https://hems1.vercel.app/](https://hems1.vercel.app/)** or click the **Deploy with Vercel** button to clone your own.
+2. Sign in with GitHub on [Vercel](https://vercel.com) if deploying your own copy.
+3. **Demo Credentials for Testing**:
+   - `admin` / `admin123` (ER Administrator)
+   - `doctor` / `doctor123` (Attending Physician)
+   - `25bce5654` / `25bce5654` (Student Lab Account)
+4. **(Optional) Cloud Database Connection**:
    - Go to Vercel Project Settings ➔ **Environment Variables**.
    - Add `DATABASE_URL` with your free connection string from [Neon](https://neon.tech) or [Supabase](https://supabase.com).
    - If omitted, the online server automatically operates with high-resilience in-cloud state pre-seeded with all accounts and beds.
