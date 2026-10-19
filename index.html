@@ -250,6 +250,19 @@
         const API_BASE = (window.HEMS_API_BASE || '').trim().replace(/\/+$/, '');
         const apiUrl = (path) => `${API_BASE}${path}`;
 
+        // Resilient fetch helper that handles non-JSON / error responses cleanly
+        async function fetchJsonSafe(url, options = {}) {
+            const res = await fetch(url, options);
+            const text = await res.text();
+            let data = {};
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                throw new Error(`Server returned HTTP ${res.status}: ${text.slice(0, 90)}`);
+            }
+            return { status: res.status, ok: res.ok, data };
+        }
+
         // Dynamic architecture diagram for Cloud vs Lab
         window.addEventListener('DOMContentLoaded', () => {
             const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -275,20 +288,19 @@
             const errDiv = document.getElementById('login-error');
 
             try {
-                const res = await fetch(apiUrl('/api/login'), {
+                const { ok, data } = await fetchJsonSafe(apiUrl('/api/login'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username: u, password: p })
                 });
-                const data = await res.json();
-                if (data.success) {
+                if (ok && data.success) {
                     document.getElementById('login-modal').style.display = 'none';
                     document.getElementById('header-user-name').innerText = data.name;
                     document.getElementById('header-user-role').innerText = data.role;
                     document.getElementById('user-display-tag').innerText = u;
                     loadData();
                 } else {
-                    errDiv.innerText = data.message || "Invalid login.";
+                    errDiv.innerText = data.message || data.error || "Invalid login.";
                     errDiv.style.display = 'block';
                 }
             } catch (err) {
@@ -311,13 +323,13 @@
         async function loadData() {
             try {
                 // Load Patients
-                const patRes = await fetch(apiUrl('/api/patients'));
-                const patients = await patRes.json();
+                const patRes = await fetchJsonSafe(apiUrl('/api/patients'));
+                const patients = Array.isArray(patRes.data) ? patRes.data : [];
                 renderPatients(patients);
 
                 // Load Beds
-                const bedRes = await fetch(apiUrl('/api/beds'));
-                const beds = await bedRes.json();
+                const bedRes = await fetchJsonSafe(apiUrl('/api/beds'));
+                const beds = Array.isArray(bedRes.data) ? bedRes.data : [];
                 renderBeds(beds);
 
                 // Update Stats
@@ -409,13 +421,12 @@
             const alertDiv = document.getElementById('admit-alert');
 
             try {
-                const res = await fetch(apiUrl('/api/admit'), {
+                const { ok, data } = await fetchJsonSafe(apiUrl('/api/admit'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ patientId: id, name, age, gender, triage, bedId })
                 });
-                const data = await res.json();
-                if (data.success) {
+                if (ok && data.success) {
                     alertDiv.style.background = '#dcfce7';
                     alertDiv.style.color = '#166534';
                     alertDiv.innerText = data.message;
@@ -429,7 +440,7 @@
                 } else {
                     alertDiv.style.background = '#fee2e2';
                     alertDiv.style.color = '#991b1b';
-                    alertDiv.innerText = data.message;
+                    alertDiv.innerText = data.message || data.error || "Admission failed.";
                     alertDiv.style.display = 'block';
                 }
             } catch (err) {
@@ -443,13 +454,12 @@
         async function discharge(patientId) {
             if (!confirm(`Discharge Patient #${patientId} and release bed?`)) return;
             try {
-                const res = await fetch(apiUrl('/api/discharge'), {
+                const { ok, data } = await fetchJsonSafe(apiUrl('/api/discharge'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ patientId })
                 });
-                const data = await res.json();
-                alert(data.message);
+                alert(data.message || (ok ? "Discharged successfully" : "Discharge failed"));
                 loadData();
             } catch (err) {
                 alert("Error: " + err.message);
